@@ -1,3 +1,5 @@
+import pytest
+
 import click
 
 
@@ -9,3 +11,14 @@ def test_iter_lazyfile(tmpdir):
         with click.utils._LazyFile(f.name) as lf:
             for e_line, a_line in zip(expected, lf, strict=False):
                 assert e_line == a_line.strip()
+
+
+def test_missing_read_is_deferred(tmp_path):
+    lazy_file = click.utils._LazyFile(
+        tmp_path / "missing.txt", mode="r", defer_missing=True
+    )
+
+    assert lazy_file._f is None
+
+    with pytest.raises(click.exceptions.FileError):
+        lazy_file.read()

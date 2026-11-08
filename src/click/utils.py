@@ -124,6 +124,7 @@ class _LazyFile:
         encoding: str | None = None,
         errors: str | None = "strict",
         atomic: bool = False,
+        defer_missing: bool = False,
     ) -> None:
         self.name = os.fspath(filename)
         self.mode = mode
@@ -138,7 +139,15 @@ class _LazyFile:
                 # Open and close the file in case we're opening it for
                 # reading so that we can catch at least some errors in
                 # some cases early.
-                open(filename, mode).close()
+                try:
+                    open(filename, mode).close()
+                except FileNotFoundError:
+                    # A missing default value is a valid lazy input until the
+                    # command actually reads from it. On Windows, Python
+                    # raises this error while constructing the wrapper, which
+                    # defeats lazy opening for optional file arguments.
+                    if not defer_missing:
+                        raise
             self._f = None
             self.should_close = True
 

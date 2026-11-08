@@ -994,8 +994,22 @@ class File(ParamType[t.IO[t.Any]]):
             lazy = self.resolve_lazy_flag(value)
 
             if lazy:
+                defer_missing = False
+
+                if ctx is not None and param is not None and os.name == "nt":
+                    from .core import ParameterSource
+
+                    defer_missing = (
+                        ctx.get_parameter_source(param.name) is ParameterSource.DEFAULT
+                    )
+
                 lf = _LazyFile(
-                    value, self.mode, self.encoding, self.errors, atomic=self.atomic
+                    value,
+                    self.mode,
+                    self.encoding,
+                    self.errors,
+                    atomic=self.atomic,
+                    defer_missing=defer_missing,
                 )
 
                 if ctx is not None:

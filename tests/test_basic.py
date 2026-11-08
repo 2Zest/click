@@ -468,6 +468,18 @@ def test_file_lazy_mode(runner, tmp_path):
     assert f"Invalid value for '--file': '{non_lazy}'" in result_in.output
 
 
+def test_file_lazy_default_missing_on_windows(runner, monkeypatch):
+    monkeypatch.setattr(click.types.os, "name", "nt")
+
+    @click.command()
+    @click.argument("file", default="missing.txt", type=click.File("r", lazy=True))
+    def input(file):
+        pass
+
+    result = runner.invoke(input, [])
+    assert result.exit_code == 0
+
+
 def test_path_option(runner, tmp_path):
     @click.command()
     @click.option("-O", type=click.Path(file_okay=False, exists=True, writable=True))
